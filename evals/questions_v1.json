@@ -1,0 +1,316 @@
+[
+  {
+    "id": "q001",
+    "question": "How many videos are in the dataset?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["video_count"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q002",
+    "question": "How many rows are in each modeled table?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": [
+      "fact_videos",
+      "dim_categories",
+      "dim_topics",
+      "fact_video_tags",
+      "fact_video_topics"
+    ],
+    "expected_metrics": ["model_row_count"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q003",
+    "question": "What is the average view count across all videos?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["avg_views"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q004",
+    "question": "What is the median view count across all videos?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["median_views"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q005",
+    "question": "What are the min and max view counts?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["min_views", "max_views"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q006",
+    "question": "What are the average, median, min, and max like counts?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["avg_likes", "median_likes", "min_likes", "max_likes"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q007",
+    "question": "What are the average, median, min, and max comment counts?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": [
+      "avg_comments",
+      "median_comments",
+      "min_comments",
+      "max_comments"
+    ],
+    "requires_human_review": false
+  },
+  {
+    "id": "q008",
+    "question": "What are the average, median, min, and max video durations in seconds?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": [
+      "avg_duration_seconds",
+      "median_duration_seconds",
+      "min_duration_seconds",
+      "max_duration_seconds"
+    ],
+    "requires_human_review": false
+  },
+  {
+    "id": "q009",
+    "question": "Which video has the most views?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["max_views"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q010",
+    "question": "How many distinct categories and topics are represented?",
+    "difficulty": "easy",
+    "answer_type": "exact",
+    "expected_tables": ["dim_categories", "dim_topics"],
+    "expected_metrics": ["model_row_count"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q011",
+    "question": "Which categories have the most videos?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["video_count"],
+    "expected_dimensions": ["categoryTitle"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q012",
+    "question": "Which categories have the highest average view count?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["avg_views"],
+    "expected_dimensions": ["categoryTitle"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q013",
+    "question": "Which topics appear on the most videos?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos", "fact_video_topics"],
+    "expected_metrics": ["topic_video_count"],
+    "expected_dimensions": ["topicTitle"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q014",
+    "question": "Which topics have the highest average view count?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos", "fact_video_topics"],
+    "expected_metrics": ["avg_views"],
+    "expected_dimensions": ["topicTitle"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q015",
+    "question": "Which tags appear most often?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_video_tags"],
+    "expected_metrics": ["tag_occurrence_count"],
+    "expected_dimensions": ["tag"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q016",
+    "question": "Which tags are associated with the highest average view count?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos", "fact_video_tags"],
+    "expected_metrics": ["avg_views"],
+    "expected_dimensions": ["tag"],
+    "requires_human_review": true
+  },
+  {
+    "id": "q017",
+    "question": "Which channels have the most videos?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["video_count"],
+    "expected_dimensions": ["channel"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q018",
+    "question": "Which channels have the highest average view count?",
+    "difficulty": "medium",
+    "answer_type": "grouped",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["avg_views"],
+    "expected_dimensions": ["channel"],
+    "requires_human_review": true
+  },
+  {
+    "id": "q019",
+    "question": "Do Entertainment videos have more average views than People & Blogs videos?",
+    "difficulty": "medium",
+    "answer_type": "comparison",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["avg_views"],
+    "expected_dimensions": ["categoryTitle"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q020",
+    "question": "Do videos tagged with 'heated rivalry' have higher average views than videos without that tag?",
+    "difficulty": "medium",
+    "answer_type": "comparison",
+    "expected_tables": ["fact_videos", "fact_video_tags"],
+    "expected_metrics": ["avg_views"],
+    "expected_dimensions": ["tag"],
+    "requires_human_review": true
+  },
+  {
+    "id": "q021",
+    "question": "What kinds of Heated Rivalry videos seem most common in this dataset?",
+    "difficulty": "hard",
+    "answer_type": "synthesis",
+    "expected_tables": [
+      "fact_videos",
+      "fact_video_tags",
+      "fact_video_topics"
+    ],
+    "expected_metrics": ["video_count", "tag_occurrence_count", "topic_video_count"],
+    "requires_human_review": true
+  },
+  {
+    "id": "q022",
+    "question": "What kinds of videos seem to perform best by view count?",
+    "difficulty": "hard",
+    "answer_type": "synthesis",
+    "expected_tables": [
+      "fact_videos",
+      "fact_video_tags",
+      "fact_video_topics"
+    ],
+    "expected_metrics": ["avg_views", "max_views"],
+    "requires_human_review": true
+  },
+  {
+    "id": "q023",
+    "question": "Are official clips or fan-created videos performing better?",
+    "difficulty": "hard",
+    "answer_type": "synthesis",
+    "expected_tables": ["fact_videos", "fact_video_tags"],
+    "expected_metrics": ["avg_views", "avg_likes", "avg_comments"],
+    "requires_human_review": true,
+    "expected_limitation": "The database does not have an official/fan-made label, so any answer must explain the proxy used."
+  },
+  {
+    "id": "q024",
+    "question": "What should we be careful about when interpreting the top-viewed videos?",
+    "difficulty": "hard",
+    "answer_type": "limitation",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["max_views"],
+    "requires_human_review": true,
+    "expected_limitation": "View counts are point-in-time snapshots and may reflect age, channel size, platform recommendation, or unrelated uses of the search phrase."
+  },
+  {
+    "id": "q025",
+    "question": "Can we tell what fans are saying in the comments?",
+    "difficulty": "hard",
+    "answer_type": "answerability",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["comment_count"],
+    "requires_human_review": true,
+    "expected_limitation": "The database has comment counts but not comment text, so it cannot answer comment content or sentiment."
+  },
+  {
+    "id": "q026",
+    "question": "Can we infer fan sentiment from comment counts?",
+    "difficulty": "hard",
+    "answer_type": "answerability",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["comment_count"],
+    "requires_human_review": true,
+    "expected_limitation": "Comment counts show engagement volume, not sentiment."
+  },
+  {
+    "id": "q027",
+    "question": "Can we identify whether a video is a reaction, recap, edit, trailer, or official clip?",
+    "difficulty": "hard",
+    "answer_type": "answerability",
+    "expected_tables": ["fact_videos", "fact_video_tags"],
+    "expected_metrics": [],
+    "requires_human_review": true,
+    "expected_limitation": "The database has title, description, channel, tags, category, and topics, but no explicit content-type label."
+  },
+  {
+    "id": "q028",
+    "question": "How much of the dataset has creator-supplied tags?",
+    "difficulty": "medium",
+    "answer_type": "exact",
+    "expected_tables": ["fact_videos", "fact_video_tags"],
+    "expected_metrics": ["tagged_video_count", "video_count"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q029",
+    "question": "How many tags does a tagged video have on average?",
+    "difficulty": "medium",
+    "answer_type": "exact",
+    "expected_tables": ["fact_video_tags"],
+    "expected_metrics": ["average_tags_per_video"],
+    "requires_human_review": false
+  },
+  {
+    "id": "q030",
+    "question": "What are the main limitations of this dataset for understanding the Heated Rivalry fandom?",
+    "difficulty": "hard",
+    "answer_type": "synthesis",
+    "expected_tables": [
+      "fact_videos",
+      "fact_video_tags",
+      "fact_video_topics"
+    ],
+    "expected_metrics": ["video_count", "tagged_video_count"],
+    "requires_human_review": true,
+    "expected_limitation": "The answer should mention search-result coverage, missing comments/transcripts, point-in-time metrics, broad categories, and incomplete tags."
+  }
+]

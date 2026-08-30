@@ -2,6 +2,12 @@
 
 This file defines the analytics concepts the LLM agent should use when answering questions about the YouTube dataset.
 
+Related docs:
+
+- `docs/schema.md` defines tables, columns, datatypes, and grains.
+- `docs/agent_rules.md` defines answer behavior, self-checks, and feedback rules.
+- `docs/gotchas.md` lists known data limitations and interpretation traps.
+
 The modeled tables are:
 
 - `fact_videos`

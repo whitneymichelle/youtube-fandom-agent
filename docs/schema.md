@@ -2,6 +2,12 @@
 
 This project stores YouTube data in `data/processed/heated_rivalry.db`.
 
+Related docs:
+
+- `docs/semantic_model.md` defines agent-facing metrics and joins.
+- `docs/agent_rules.md` defines answer behavior, self-checks, and feedback rules.
+- `docs/gotchas.md` lists known data limitations and interpretation traps.
+
 The database has two layers:
 
 - Source/staging tables preserve loaded API-shaped data.
