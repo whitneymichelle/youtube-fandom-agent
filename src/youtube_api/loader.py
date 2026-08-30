@@ -143,6 +143,8 @@ class YouTubeDataLoader:
             );
 
             DROP TABLE IF EXISTS fact_video_categories;
+            DROP TABLE IF EXISTS video_topics;
+            DROP TABLE IF EXISTS youtube_topics;
             DROP TABLE IF EXISTS fact_video_topics;
             DROP TABLE IF EXISTS fact_video_tags;
             DROP TABLE IF EXISTS dim_categories;
@@ -158,7 +160,10 @@ class YouTubeDataLoader:
                 viewCount INTEGER,
                 likeCount INTEGER,
                 commentCount INTEGER,
-                duration TEXT
+                duration TEXT,
+                categoryId TEXT,
+                categoryTitle TEXT,
+                FOREIGN KEY (categoryId) REFERENCES dim_categories(categoryId)
             );
 
             CREATE TABLE dim_categories (
@@ -187,31 +192,21 @@ class YouTubeDataLoader:
                 FOREIGN KEY (topicId) REFERENCES dim_topics(topicId)
             );
 
-            CREATE TABLE fact_video_categories (
-                videoId TEXT PRIMARY KEY,
-                categoryId TEXT,
-                categoryTitle TEXT,
-                FOREIGN KEY (videoId) REFERENCES fact_videos(videoId),
-                FOREIGN KEY (categoryId) REFERENCES dim_categories(categoryId)
-            );
-
-            INSERT INTO fact_videos (
-                videoId, title, description, channel, publishedAt,
-                viewCount, likeCount, commentCount, duration
-            )
-            SELECT
-                videoId, title, description, channel, publishedAt,
-                viewCount, likeCount, commentCount, duration
-            FROM videos;
-
             INSERT INTO dim_categories (categoryId, categoryTitle)
             SELECT DISTINCT v.categoryId, c.title
             FROM videos v
             LEFT JOIN youtube_categories c ON c.categoryId = v.categoryId
             WHERE v.categoryId IS NOT NULL;
 
-            INSERT INTO fact_video_categories (videoId, categoryId, categoryTitle)
-            SELECT v.videoId, v.categoryId, c.categoryTitle
+            INSERT INTO fact_videos (
+                videoId, title, description, channel, publishedAt,
+                viewCount, likeCount, commentCount, duration,
+                categoryId, categoryTitle
+            )
+            SELECT
+                v.videoId, v.title, v.description, v.channel, v.publishedAt,
+                v.viewCount, v.likeCount, v.commentCount, v.duration,
+                v.categoryId, c.categoryTitle
             FROM videos v
             LEFT JOIN dim_categories c ON c.categoryId = v.categoryId;
         """)
@@ -278,9 +273,6 @@ class YouTubeDataLoader:
             ).fetchone()[0],
             'fact_video_topics': self.cursor.execute(
                 "SELECT COUNT(*) FROM fact_video_topics"
-            ).fetchone()[0],
-            'fact_video_categories': self.cursor.execute(
-                "SELECT COUNT(*) FROM fact_video_categories"
             ).fetchone()[0],
         }
     
