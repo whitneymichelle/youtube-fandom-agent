@@ -3,9 +3,33 @@ Load raw YouTube JSON data into SQLite database.
 """
 
 import json
+import re
 import sqlite3
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+
+
+def parse_duration_seconds(duration: str) -> Optional[int]:
+    """Convert a YouTube ISO 8601 duration string to seconds."""
+    if not duration:
+        return None
+
+    match = re.fullmatch(
+        r"P(?:(?P<days>\d+)D)?"
+        r"(?:T(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?"
+        r"(?:(?P<seconds>\d+)S)?)?",
+        duration,
+    )
+    if not match:
+        return None
+
+    parts = {key: int(value or 0) for key, value in match.groupdict().items()}
+    return (
+        parts["days"] * 86400
+        + parts["hours"] * 3600
+        + parts["minutes"] * 60
+        + parts["seconds"]
+    )
 
 
 class YouTubeDataLoader:
@@ -161,6 +185,7 @@ class YouTubeDataLoader:
                 likeCount INTEGER,
                 commentCount INTEGER,
                 duration TEXT,
+                durationSeconds INTEGER,
                 categoryId TEXT,
                 categoryTitle TEXT,
                 FOREIGN KEY (categoryId) REFERENCES dim_categories(categoryId)
@@ -200,26 +225,29 @@ class YouTubeDataLoader:
 
             INSERT INTO fact_videos (
                 videoId, title, description, channel, publishedAt,
-                viewCount, likeCount, commentCount, duration,
+                viewCount, likeCount, commentCount, duration, durationSeconds,
                 categoryId, categoryTitle
             )
             SELECT
                 v.videoId, v.title, v.description, v.channel, v.publishedAt,
-                v.viewCount, v.likeCount, v.commentCount, v.duration,
+                v.viewCount, v.likeCount, v.commentCount, v.duration, NULL,
                 v.categoryId, c.categoryTitle
             FROM videos v
             LEFT JOIN dim_categories c ON c.categoryId = v.categoryId;
         """)
 
         videos = self.cursor.execute(
-            "SELECT videoId, tags, topicIds FROM videos"
+            "SELECT videoId, duration, tags, topicIds FROM videos"
         ).fetchall()
 
+        video_durations = []
         topics = {}
         video_topics = []
         video_tags = []
 
-        for video_id, raw_tags, raw_topics in videos:
+        for video_id, duration, raw_tags, raw_topics in videos:
+            video_durations.append((parse_duration_seconds(duration), video_id))
+
             try:
                 tags = json.loads(raw_tags or "[]")
             except json.JSONDecodeError:
@@ -240,6 +268,12 @@ class YouTubeDataLoader:
                 topic_title = topic_id.rstrip("/").split("/")[-1].replace("_", " ")
                 topics[topic_id] = topic_title
                 video_topics.append((video_id, topic_id, topic_title))
+
+        self.cursor.executemany("""
+            UPDATE fact_videos
+            SET durationSeconds = ?
+            WHERE videoId = ?
+        """, video_durations)
 
         self.cursor.executemany("""
             INSERT OR IGNORE INTO fact_video_tags (videoId, tag)

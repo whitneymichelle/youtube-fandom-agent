@@ -1,6 +1,6 @@
 import json
 
-from src.youtube_api.loader import YouTubeDataLoader
+from src.youtube_api.loader import YouTubeDataLoader, parse_duration_seconds
 
 
 def write_batch(raw_dir, batch_num, videos):
@@ -16,6 +16,7 @@ def make_video(
     topic_ids=None,
     category_id="24",
     title="Test Video",
+    duration="PT1M",
 ):
     return {
         "videoId": video_id,
@@ -26,7 +27,7 @@ def make_video(
         "viewCount": 100,
         "likeCount": 10,
         "commentCount": 2,
-        "duration": "PT1M",
+        "duration": duration,
         "tags": json.dumps(tags or []),
         "categoryId": category_id,
         "topicIds": json.dumps(topic_ids or []),
@@ -221,5 +222,33 @@ def test_build_modeled_tables_denormalizes_category_title_on_fact_videos(tmp_pat
         ).fetchone()
 
         assert category == ("video-1", "24", "Entertainment")
+    finally:
+        loader.close()
+
+
+def test_parse_duration_seconds():
+    assert parse_duration_seconds("PT16S") == 16
+    assert parse_duration_seconds("PT1M36S") == 96
+    assert parse_duration_seconds("PT1H2M3S") == 3723
+    assert parse_duration_seconds("P1DT2H") == 93600
+    assert parse_duration_seconds(None) is None
+    assert parse_duration_seconds("not-a-duration") is None
+
+
+def test_build_modeled_tables_adds_duration_seconds(tmp_path):
+    raw_dir = tmp_path / "raw"
+    write_batch(raw_dir, 1, [make_video("video-1", duration="PT1H2M3S")])
+
+    loader = create_loader(tmp_path)
+    try:
+        loader.load_from_json_files(str(raw_dir))
+        loader.build_modeled_tables()
+
+        duration_seconds = loader.cursor.execute(
+            "SELECT durationSeconds FROM fact_videos WHERE videoId = ?",
+            ("video-1",),
+        ).fetchone()
+
+        assert duration_seconds == (3723,)
     finally:
         loader.close()
