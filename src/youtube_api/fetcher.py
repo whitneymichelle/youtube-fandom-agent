@@ -46,7 +46,8 @@ class YouTubeDataFetcher:
         Returns:
             List of video data dicts with keys:
             - videoId, title, description, channel, publishedAt,
-              viewCount, likeCount, commentCount, duration
+              viewCount, likeCount, commentCount, duration,
+              tags (JSON array), categoryId, topicIds (JSON array)
 
         Raises:
             HttpError: If API call fails
@@ -73,12 +74,21 @@ class YouTubeDataFetcher:
             # Step 2: Get detailed stats (views, likes, etc) for each video
             stats_response = self.youtube.videos().list(
                 id=','.join(video_ids),
-                part="statistics,snippet,contentDetails"
+                part="statistics,snippet,contentDetails,topicDetails"
             ).execute()
 
             # Step 3: Extract and structure the data
             videos = []
             for video in stats_response.get('items', []):
+                # Extract tags (list of strings, store as JSON)
+                tags = video['snippet'].get('tags', [])
+                
+                # Extract category ID
+                category_id = video['snippet'].get('categoryId', None)
+                
+                # Extract topic categories (list of Wikipedia URLs)
+                topic_categories = video.get('topicDetails', {}).get('topicCategories', [])
+                
                 video_data = {
                     'videoId': video['id'],
                     'title': video['snippet']['title'],
@@ -88,7 +98,10 @@ class YouTubeDataFetcher:
                     'viewCount': int(video['statistics'].get('viewCount', 0)),
                     'likeCount': int(video['statistics'].get('likeCount', 0)),
                     'commentCount': int(video['statistics'].get('commentCount', 0)),
-                    'duration': video['contentDetails']['duration'],
+                    'duration': video.get('contentDetails', {}).get('duration'),
+                    'tags': json.dumps(tags),
+                    'categoryId': category_id,
+                    'topicIds': json.dumps(topic_categories),
                 }
                 videos.append(video_data)
 
@@ -157,11 +170,21 @@ class YouTubeDataFetcher:
                 # Get stats for this batch
                 stats_response = self.youtube.videos().list(
                     id=','.join(batch_video_ids),
-                    part="statistics,snippet,contentDetails"
+                    part="statistics,snippet,contentDetails,topicDetails"
                 ).execute()
                 
                 # Structure the data
+                batch_videos = []
                 for video in stats_response.get('items', []):
+                    # Extract tags
+                    tags = video['snippet'].get('tags', [])
+                    
+                    # Extract category ID
+                    category_id = video['snippet'].get('categoryId', None)
+                    
+                    # Extract topic categories
+                    topic_categories = video.get('topicDetails', {}).get('topicCategories', [])
+                    
                     video_data = {
                         'videoId': video['id'],
                         'title': video['snippet']['title'],
@@ -171,17 +194,21 @@ class YouTubeDataFetcher:
                         'viewCount': int(video['statistics'].get('viewCount', 0)),
                         'likeCount': int(video['statistics'].get('likeCount', 0)),
                         'commentCount': int(video['statistics'].get('commentCount', 0)),
-                        'duration': video['contentDetails']['duration'],
+                        'duration': video.get('contentDetails', {}).get('duration'),
+                        'tags': json.dumps(tags),
+                        'categoryId': category_id,
+                        'topicIds': json.dumps(topic_categories),
                     }
                     videos.append(video_data)
+                    batch_videos.append(video_data)
                 
                 # Save batch to file
                 batch_file = Path(output_dir) / f"{query.replace(' ', '_')}_batch_{batch_num}.json"
                 with open(batch_file, 'w') as f:
-                    json.dump(videos[-len(batch_video_ids):], f, indent=2)
+                    json.dump(batch_videos, f, indent=2)
                 files_saved.append(str(batch_file))
                 
-                print(f"Batch {batch_num}: Fetched {len(batch_video_ids)} videos "
+                print(f"Batch {batch_num}: Fetched {len(batch_videos)} videos "
                       f"(Total: {len(videos)}/{target_count})")
                 
                 # Get next page token for pagination
@@ -193,8 +220,8 @@ class YouTubeDataFetcher:
             
             return {
                 'total_videos': len(videos),
-                'batches': batch_num - 1,
-                'quota_used': (batch_num - 1) * 100,
+                'batches': len(files_saved),
+                'quota_used': len(files_saved) * 100,
                 'files_saved': files_saved
             }
             
