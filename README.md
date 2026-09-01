@@ -72,6 +72,23 @@ Track improvements across versions:
 - Accuracy and relevance scores
 - Performance benchmarks
 
+## Simple SQL Agent
+
+The first agent is a deterministic SQL-backed baseline. It answers supported
+questions from the modeled SQLite tables and returns an answer, SQL, support
+level, self-check, and limitations.
+
+Run it with:
+
+```bash
+python -m src.agents.simple_sql_agent "How many videos are in the dataset?"
+```
+
+It is intentionally not a RAG system yet. The current dataset is structured, so
+SQL is the right retrieval layer for V1 metric questions. RAG becomes useful
+later when the project adds unstructured sources such as transcripts, comment
+text, articles, notes, or human review examples.
+
 ## Contributing
 
 1. Create feature branches
