@@ -21,6 +21,7 @@ def export_review(
     results_path: str = DEFAULT_RESULTS_PATH,
     review_path: str = DEFAULT_REVIEW_PATH,
     human_only: bool = False,
+    overwrite: bool = False,
 ) -> Dict[str, Any]:
     results = load_jsonl(results_path)
     if human_only:
@@ -29,6 +30,12 @@ def export_review(
         review_results = results
 
     output_path = Path(review_path)
+    if output_path.exists() and not overwrite:
+        raise FileExistsError(
+            f"Review file already exists: {review_path}. "
+            "Use --overwrite to replace it, or choose a new --review path."
+        )
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(render_review(review_results, results_path), encoding="utf-8")
 
@@ -38,6 +45,7 @@ def export_review(
         "total_results": len(results),
         "review_items": len(review_results),
         "human_only": human_only,
+        "overwrite": overwrite,
     }
 
 
@@ -161,12 +169,18 @@ def main() -> None:
         action="store_true",
         help="Only include questions marked as needing human review",
     )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Replace the review file if it already exists",
+    )
     args = parser.parse_args()
 
     summary = export_review(
         results_path=args.results,
         review_path=args.review,
         human_only=args.human_only,
+        overwrite=args.overwrite,
     )
     print_summary(summary)
 

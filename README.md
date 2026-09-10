@@ -72,6 +72,17 @@ Track improvements across versions:
 - Accuracy and relevance scores
 - Performance benchmarks
 
+Run the eval and export a review worksheet:
+
+```bash
+python -m src.evaluation.run_eval
+python -m src.evaluation.export_review --human-only
+```
+
+Review files are protected by default so human notes are not overwritten. Use a
+new `--review` path for a fresh run, or pass `--overwrite` only when replacing
+the existing review is intentional.
+
 ## Simple SQL Agent
 
 The first agent is a deterministic SQL-backed baseline. It answers supported

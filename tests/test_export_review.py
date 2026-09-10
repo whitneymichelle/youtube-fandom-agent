@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from src.evaluation.export_review import export_review
 
 
@@ -70,3 +72,29 @@ def test_export_review_can_filter_to_human_review_items(tmp_path):
     assert summary["human_only"] is True
     assert "## q001: Question q001?" not in review
     assert "## q002: Question q002?" in review
+
+
+def test_export_review_refuses_to_overwrite_existing_review(tmp_path):
+    results_path = tmp_path / "results.jsonl"
+    review_path = tmp_path / "review.md"
+    write_jsonl(results_path, [make_result("q001", True)])
+    review_path.write_text("human notes\n", encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match="Use --overwrite"):
+        export_review(str(results_path), str(review_path))
+
+    assert review_path.read_text(encoding="utf-8") == "human notes\n"
+
+
+def test_export_review_can_overwrite_existing_review_when_requested(tmp_path):
+    results_path = tmp_path / "results.jsonl"
+    review_path = tmp_path / "review.md"
+    write_jsonl(results_path, [make_result("q001", True)])
+    review_path.write_text("old review\n", encoding="utf-8")
+
+    summary = export_review(str(results_path), str(review_path), overwrite=True)
+    review = review_path.read_text(encoding="utf-8")
+
+    assert summary["overwrite"] is True
+    assert "old review" not in review
+    assert "## q001: Question q001?" in review

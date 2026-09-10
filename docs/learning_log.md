@@ -63,10 +63,16 @@ Decision: Eval results are written as JSONL, and human review is exported to Mar
 
 Why: JSONL is good for programs because each line is one complete result. Markdown is better for humans because it is readable and easy to annotate with scores and notes.
 
+Follow-up decision: Review exports should not overwrite an existing Markdown
+review file by default. Human scores and notes are durable feedback, while eval
+JSONL is generated output. To replace a review file intentionally, use the
+exporter's `--overwrite` option.
+
 Check your understanding:
 
 - Why is `evals/results/simple_sql_agent_v1.jsonl` hard to review directly?
 - What does `evals/reviews/simple_sql_agent_v1_review.md` add?
+- Why should review Markdown be protected more carefully than result JSONL?
 
 ### 2026-09-09: Treat Review Notes As System Updates
 
