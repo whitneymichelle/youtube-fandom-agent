@@ -46,16 +46,17 @@ Check your understanding:
 - What kinds of questions can a deterministic SQL agent answer well?
 - What kinds of questions require an LLM or human judgment?
 
-### 2026-09-09: Use SQL Before RAG
+### 2026-09-09: Start With SQL, Then Add Semantic Retrieval
 
-Decision: V1 uses SQLite queries as the retrieval layer. RAG is deferred.
+Decision: V1 uses SQLite queries as the retrieval layer for metric questions. Full RAG is deferred, but the current data can already support lightweight LLM inference over text fields.
 
-Why: The current dataset is structured. Metrics like counts, averages, medians, tags, topics, and categories are better answered with SQL than vector search. RAG becomes useful later for unstructured sources like transcripts, comments, articles, notes, or human review examples.
+Why: Metrics like counts, averages, medians, tags, topics, and categories are better answered with SQL than vector search. But the dataset also includes titles, descriptions, tags, channel names, categories, and topics. Those fields can help answer softer questions about video type, themes, and creator framing when the agent clearly labels the answer as inference. RAG becomes more useful later for richer unstructured sources like transcripts, comments, articles, notes, or human review examples.
 
 Check your understanding:
 
 - Why is SQL the right retrieval layer for the current data?
-- What new data would make RAG useful?
+- Which current fields could support lightweight inference?
+- What new data would make RAG more useful?
 
 ### 2026-09-09: Separate Machine Results From Human Review
 

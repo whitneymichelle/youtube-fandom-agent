@@ -95,10 +95,17 @@ Run it with:
 python -m src.agents.simple_sql_agent "How many videos are in the dataset?"
 ```
 
-It is intentionally not a RAG system yet. The current dataset is structured, so
-SQL is the right retrieval layer for V1 metric questions. RAG becomes useful
-later when the project adds unstructured sources such as transcripts, comment
-text, articles, notes, or human review examples.
+It is intentionally not a full RAG system yet. V1 uses SQL because many current
+questions are structured metric questions: counts, averages, medians, category
+breakdowns, tag counts, and topic counts.
+
+The dataset already has semi-structured text fields, including titles,
+descriptions, tags, channel names, categories, and topics. A later agent can use
+those fields for lightweight inference or retrieval, especially for video-type
+classification, theme discovery, and questions where the answer depends on
+wording rather than numeric aggregation alone. RAG becomes more useful as the
+project adds richer unstructured sources such as transcripts, comment text,
+articles, notes, or human review examples.
 
 ## Contributing
 
