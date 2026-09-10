@@ -53,7 +53,7 @@ def render_review(results: List[Dict[str, Any]], results_path: str) -> str:
         "",
         "- Correctness: `0` wrong/unsupported, `1` partially correct, `2` correct but thin, `3` correct and well-supported",
         "- Groundedness: `0` not grounded, `1` weakly grounded, `2` mostly grounded, `3` properly grounded in schema/results",
-        "- Self-awareness: `0` overconfident/wrong, `1` vague, `2` accurately states support or limits",
+        "- Self-awareness: `0` overconfident/wrong, `1` vague, `2` mostly aware but incomplete, `3` accurately states support or limits",
         "",
         "When feedback reveals a recurring failure, update the relevant system artifact: `docs/schema.md`, `docs/semantic_model.md`, `docs/gotchas.md`, `docs/agent_rules.md`, eval questions, examples, agent code, or tests.",
         "",

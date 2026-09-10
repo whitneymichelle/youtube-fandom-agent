@@ -14,6 +14,7 @@ Known limitations and interpretation traps for the YouTube fandom dataset.
 - `viewCount`, `likeCount`, and `commentCount` are snapshots from fetch time.
 - These metrics should not be described as current unless the data was just refetched.
 - A high view count can reflect age, platform promotion, channel size, or broad relevance, not only fandom interest.
+- A high average view count for a small group can be unstable. Always compare the average with the number of videos in that group.
 
 ## Comments
 
@@ -41,6 +42,14 @@ Known limitations and interpretation traps for the YouTube fandom dataset.
 - Category labels are broad, such as `Entertainment`, `People & Blogs`, or `Comedy`.
 - Category should not be treated as a precise fandom or content-type classification.
 - Category ID and category title live directly on `fact_videos`; there is no `fact_video_categories` table.
+
+## Video Type
+
+- The database does not have a true video-type field.
+- Questions about "kind" or "type" of video need clarification or proxy dimensions.
+- Available proxies include `categoryTitle`, `topicTitle`, `tag`, `channel`.
+- Proxy-based answers should say which proxy was used.
+- Do not claim that a video is official, fan-made, a reaction, a recap, an edit, or a trailer unless that is inferred from available metadata and stated as an inference.
 
 ## Duration
 
