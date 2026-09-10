@@ -108,11 +108,35 @@ Check your understanding:
 - If a user asks what "types of videos" are most common, what clarification could the agent ask?
 - If the agent answers without clarification, which proxy dimensions should it name?
 
+### 2026-09-10: Keep The Baseline Agent In One File For Now
+
+Decision: Keep `src/agents/simple_sql_agent.py` together until it becomes harder to read or test.
+
+Why: The deterministic baseline is still small enough that one file makes the available handlers easy to inspect. Splitting too early would add navigation overhead before the agent has enough complexity to justify separate modules.
+
+Check your understanding:
+
+- What would make this file worth splitting later?
+- Why is readability more important than abstract structure at this stage?
+
+### 2026-09-10: Add Versioned Eval Targets Later
+
+Decision: Keep the Makefile targets simple for V1, and add versioned eval/review targets when the agent starts changing across versions.
+
+Why: `make eval` and `make review` are enough while there is one baseline. Once there is a V2 agent or a materially different prompt/retrieval setup, versioned commands like `make eval-v2` and `make review-v2` will make comparisons easier without overwriting older artifacts.
+
+Check your understanding:
+
+- When would a new eval version be useful?
+- What should stay comparable between V1 and V2 eval runs?
+
 ## Concepts To Revisit
 
 - Golden-query baseline
 - SQL agent vs LLM SQL agent
 - RAG vs structured retrieval
+- When to split a growing agent module
+- When to version eval and review commands
 - Answer correctness vs groundedness vs self-awareness
 - Supported vs partially supported vs unsupported answers
 - Unsupported by data vs unsupported by current agent capability

@@ -1,4 +1,4 @@
-.PHONY: test eval review review-overwrite ask
+.PHONY: test eval review review-overwrite ask clean-local
 
 PYTHON := venv/bin/python
 PYTEST := venv/bin/pytest
@@ -17,3 +17,7 @@ review-overwrite:
 
 ask:
 	$(PYTHON) -m src.agents.simple_sql_agent "$(q)"
+
+clean-local:
+	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	rm -rf .pytest_cache
