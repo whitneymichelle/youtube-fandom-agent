@@ -49,6 +49,8 @@ data/processed/*
 .pytest_cache/
 .coverage
 htmlcov/
+evals/results/*
+!evals/results/.gitkeep
 
 # Logs
 *.log
