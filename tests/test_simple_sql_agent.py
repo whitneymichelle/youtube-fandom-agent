@@ -157,6 +157,60 @@ def test_agent_answers_topic_average_views_without_using_overall_average(tmp_pat
     assert response.rows[0]["avg_views"] == 400.0
 
 
+def test_agent_answers_tag_average_views(tmp_path):
+    agent = SimpleSQLAgent(str(create_agent_db(tmp_path)))
+
+    response = agent.answer("Which tags are associated with the highest average view count?")
+
+    assert response.support_level == "supported"
+    assert "Top tags by average views" in response.answer
+    assert response.rows[0]["tag"] == "fanedit"
+    assert response.rows[0]["avg_views"] == 300.0
+    assert response.rows[0]["video_count"] == 1
+    assert "fact_video_tags" in response.sql
+
+
+def test_agent_answers_channel_average_views(tmp_path):
+    agent = SimpleSQLAgent(str(create_agent_db(tmp_path)))
+
+    response = agent.answer("Which channels have the highest average view count?")
+
+    assert response.support_level == "supported"
+    assert "Top channels by average views" in response.answer
+    assert response.rows[0]["channel"] == "Sketch Channel"
+    assert response.rows[0]["avg_views"] == 500.0
+    assert response.rows[0]["video_count"] == 1
+
+
+def test_agent_answers_heated_rivalry_tagged_vs_untagged_average_views(tmp_path):
+    agent = SimpleSQLAgent(str(create_agent_db(tmp_path)))
+
+    response = agent.answer(
+        "Do videos tagged with 'heated rivalry' have higher average views than videos without that tag?"
+    )
+
+    assert response.support_level == "supported"
+    assert response.answer.startswith("No.")
+    assert "Videos tagged with 'heated rivalry' average 200.00 views" in response.answer
+    assert response.rows == [
+        {
+            "tag_status": "not_tagged_heated_rivalry",
+            "video_count": 1,
+            "avg_views": 500.0,
+            "min_views": 500,
+            "max_views": 500,
+        },
+        {
+            "tag_status": "tagged_heated_rivalry",
+            "video_count": 2,
+            "avg_views": 200.0,
+            "min_views": 100,
+            "max_views": 300,
+        },
+    ]
+    assert "EXISTS" in response.sql
+
+
 def test_agent_reports_comment_text_as_unsupported(tmp_path):
     agent = SimpleSQLAgent(str(create_agent_db(tmp_path)))
 

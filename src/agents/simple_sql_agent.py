@@ -47,8 +47,11 @@ class SimpleSQLAgent:
             self._top_topics_by_count,
             self._top_topics_by_avg_views,
             self._top_tags_by_count,
+            self._top_tags_by_avg_views,
             self._top_channels_by_count,
+            self._top_channels_by_avg_views,
             self._entertainment_vs_people_blogs_avg_views,
+            self._heated_rivalry_tagged_vs_untagged_avg_views,
             self._tagged_video_coverage,
             self._average_tags_per_tagged_video,
             self._comments_answerability,
@@ -424,6 +427,35 @@ class SimpleSQLAgent:
             limitations=["Tags are creator-supplied and many videos have no tags."],
         )
 
+    def _top_tags_by_avg_views(self, question: str) -> Optional[AgentAnswer]:
+        if "tags are associated with the highest average view count" not in question:
+            return None
+        sql = """
+            SELECT
+                fvt.tag,
+                COUNT(DISTINCT fv.videoId) AS video_count,
+                AVG(fv.viewCount) AS avg_views,
+                MIN(fv.viewCount) AS min_views,
+                MAX(fv.viewCount) AS max_views
+            FROM fact_video_tags AS fvt
+            JOIN fact_videos AS fv
+                ON fv.videoId = fvt.videoId
+            GROUP BY fvt.tag
+            ORDER BY avg_views DESC, video_count DESC, fvt.tag
+            LIMIT 10
+        """
+        return self._top_list_answer(
+            sql,
+            "Top tags by average views",
+            "tag",
+            "avg_views",
+            "Supported by joining videos to tags and grouping by tag.",
+            limitations=[
+                "Tags are creator-supplied and many videos have no tags.",
+                "Small tag groups can have unstable averages.",
+            ],
+        )
+
     def _top_channels_by_count(self, question: str) -> Optional[AgentAnswer]:
         if "channels have the most videos" not in question:
             return None
@@ -440,6 +472,30 @@ class SimpleSQLAgent:
             "channel",
             "video_count",
             "Supported by grouping `fact_videos` by channel.",
+        )
+
+    def _top_channels_by_avg_views(self, question: str) -> Optional[AgentAnswer]:
+        if "channels have the highest average view count" not in question:
+            return None
+        sql = """
+            SELECT
+                channel,
+                COUNT(*) AS video_count,
+                AVG(viewCount) AS avg_views,
+                MIN(viewCount) AS min_views,
+                MAX(viewCount) AS max_views
+            FROM fact_videos
+            GROUP BY channel
+            ORDER BY avg_views DESC, video_count DESC, channel
+            LIMIT 10
+        """
+        return self._top_list_answer(
+            sql,
+            "Top channels by average views",
+            "channel",
+            "avg_views",
+            "Supported by grouping `fact_videos` by channel.",
+            limitations=["Small channels can have unstable averages."],
         )
 
     def _top_list_answer(
@@ -498,6 +554,65 @@ class SimpleSQLAgent:
             rows=rows,
             self_check="Supported by filtering and grouping videos by category.",
             limitations=["Category labels are broad and not fandom-specific."],
+        )
+
+    def _heated_rivalry_tagged_vs_untagged_avg_views(
+        self,
+        question: str,
+    ) -> Optional[AgentAnswer]:
+        if (
+            "videos tagged with 'heated rivalry'" not in question
+            or "without that tag" not in question
+        ):
+            return None
+        sql = """
+            WITH video_tag_status AS (
+                SELECT
+                    fv.videoId,
+                    fv.viewCount,
+                    CASE
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM fact_video_tags AS fvt
+                            WHERE fvt.videoId = fv.videoId
+                                AND LOWER(fvt.tag) = 'heated rivalry'
+                        )
+                        THEN 'tagged_heated_rivalry'
+                        ELSE 'not_tagged_heated_rivalry'
+                    END AS tag_status
+                FROM fact_videos AS fv
+            )
+            SELECT
+                tag_status,
+                COUNT(*) AS video_count,
+                AVG(viewCount) AS avg_views,
+                MIN(viewCount) AS min_views,
+                MAX(viewCount) AS max_views
+            FROM video_tag_status
+            GROUP BY tag_status
+            ORDER BY tag_status
+        """
+        rows = self._execute(sql)
+        values = {row["tag_status"]: row["avg_views"] for row in rows}
+        tagged = values.get("tagged_heated_rivalry", 0)
+        untagged = values.get("not_tagged_heated_rivalry", 0)
+        verdict = "Yes" if tagged > untagged else "No"
+        return self._make_answer(
+            answer=(
+                f"{verdict}. Videos tagged with 'heated rivalry' average "
+                f"{self._format_float(tagged)} views; videos without that tag "
+                f"average {self._format_float(untagged)} views."
+            ),
+            sql=sql,
+            rows=rows,
+            self_check=(
+                "Supported by classifying each video once using an EXISTS check "
+                "against `fact_video_tags`, then comparing average view counts."
+            ),
+            limitations=[
+                "Tags are creator-supplied and may be incomplete.",
+                "This compares a tag proxy, not true Heated Rivalry relevance.",
+            ],
         )
 
     def _tagged_video_coverage(self, question: str) -> Optional[AgentAnswer]:
