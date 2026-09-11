@@ -48,6 +48,12 @@ def test_export_review_writes_markdown_template(tmp_path):
 
     assert summary["total_results"] == 2
     assert summary["review_items"] == 2
+    assert "## Summary" in review
+    assert "- Total eval questions: `2`" in review
+    assert "- Review items in this file: `2`" in review
+    assert "- Answered with SQL: `2`" in review
+    assert "Review question IDs: `q001, q002`" in review
+    assert "## Review Instructions" in review
     assert "## q001: Question q001?" in review
     assert "## q002: Question q002?" in review
     assert "- Correctness: " in review
@@ -70,6 +76,9 @@ def test_export_review_can_filter_to_human_review_items(tmp_path):
     assert summary["total_results"] == 2
     assert summary["review_items"] == 1
     assert summary["human_only"] is True
+    assert "- Total eval questions: `2`" in review
+    assert "- Review items in this file: `1`" in review
+    assert "Review question IDs: `q002`" in review
     assert "## q001: Question q001?" not in review
     assert "## q002: Question q002?" in review
 
