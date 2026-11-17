@@ -42,27 +42,18 @@ youtube-fandom-agent/
    - Build agent logic in `src/agents/`
    - Define evaluations in `src/evaluation/`
 
-## Development Phases
+## Project Shape
 
-### Phase 1: Data Collection
-- Fetch YouTube videos via API
-- Store raw data in structured format
-- Explore and clean the data
+This repo is intentionally simple: ship a useful baseline agent, collect real signals from the data, and improve it incrementally over time.
 
-### Phase 2: Basic Agent
-- Implement simple question-answering agent
-- Basic retrieval and generation
-- Initial evaluation metrics
+The current workflow is:
+- collect YouTube metadata and related raw data
+- model it into a reliable SQLite layer
+- answer a narrow set of structured questions with a deterministic SQL agent
+- add richer evidence as it becomes available, such as comments, transcripts, or additional retrieval sources
+- improve the agent without reworking the whole project into separate permanent phases
 
-### Phase 3: Enhanced Agent
-- Add more sophisticated reasoning
-- Improve context handling
-- Expand evaluation dataset
-
-### Phase 4: Advanced Capabilities
-- Multi-agent systems
-- Complex reasoning chains
-- Comprehensive evaluation framework
+The important idea is not a formal "phase plan" but a continuous loop of better data, better prompts, better queries, and better evaluations.
 
 ## Evaluation System
 

@@ -1,6 +1,6 @@
 # Agent Rules
 
-These rules define how the first YouTube fandom agent should answer questions and use feedback.
+These rules define how the YouTube fandom agent should answer questions and use feedback.
 
 Related docs:
 
@@ -67,7 +67,7 @@ For broad type questions, the agent should either:
 
 The agent should not pretend the database has a true video-type label. It currently does not have explicit labels for reaction, recap, edit, trailer, official clip, fan-made video, or unrelated match.
 
-## Known V1 Capability Gaps
+## Baseline Capability Gaps
 
 The deterministic SQL agent should add handlers for:
 
@@ -75,7 +75,7 @@ The deterministic SQL agent should add handlers for:
 - Tags ranked by average views.
 - Videos tagged with a target fandom keyword compared with videos without that tag.
 
-These questions are likely answerable from the current data, but the V1 golden-query agent may not support them until those handlers exist.
+These questions are likely answerable from the current data, but the baseline agent should treat missing handlers as an opportunity to improve the system rather than as a sign that the project is stuck in a formal phase.
 
 ## Human Feedback Loop
 
