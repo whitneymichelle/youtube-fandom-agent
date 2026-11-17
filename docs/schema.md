@@ -1,6 +1,6 @@
 # Database Schema
 
-This project stores YouTube data in `data/processed/heated_rivalry.db`.
+This project stores YouTube data in a local processed SQLite database under `data/processed/`.
 
 Related docs:
 
@@ -19,7 +19,7 @@ The database has two layers:
 
 Grain: one row per unique YouTube video.
 
-Source: loaded from `data/raw/heated_rivalry_batch_*.json`.
+Source: loaded from raw YouTube result batches in `data/raw/`.
 
 | Column | Type | Key | Description |
 | --- | --- | --- | --- |

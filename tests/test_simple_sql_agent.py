@@ -40,7 +40,7 @@ def make_video(
 
 def create_agent_db(tmp_path):
     raw_dir = tmp_path / "raw"
-    db_path = tmp_path / "heated_rivalry.db"
+    db_path = tmp_path / "youtube_fandom.db"
 
     write_batch(
         raw_dir,

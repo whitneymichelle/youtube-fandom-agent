@@ -35,7 +35,7 @@ def parse_duration_seconds(duration: str) -> Optional[int]:
 class YouTubeDataLoader:
     """Load YouTube JSON files into SQLite database."""
     
-    def __init__(self, db_path: str = "data/processed/heated_rivalry.db"):
+    def __init__(self, db_path: str = "data/processed/youtube_fandom.db"):
         """
         Initialize the data loader.
         
@@ -343,6 +343,6 @@ if __name__ == "__main__":
     for table_name, row_count in model_stats.items():
         print(f"   {table_name}: {row_count}")
     
-    print(f"\n   Database saved to: data/processed/heated_rivalry.db")
+    print(f"\n   Database saved to: data/processed/youtube_fandom.db")
     
     loader.close()

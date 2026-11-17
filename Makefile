@@ -2,7 +2,7 @@
 
 PYTHON := venv/bin/python
 PYTEST := venv/bin/pytest
-DB ?= data/processed/heated_rivalry.db
+DB ?= data/processed/youtube_fandom.db
 QUESTIONS ?= evals/questions_v1.json
 RESULTS ?= evals/results/simple_sql_agent_v1.jsonl
 REVIEW ?= evals/reviews/simple_sql_agent_v1_review.md

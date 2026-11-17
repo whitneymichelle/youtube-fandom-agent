@@ -35,7 +35,7 @@ def make_video(
 
 
 def create_loader(tmp_path):
-    db_path = tmp_path / "heated_rivalry.db"
+    db_path = tmp_path / "youtube_fandom.db"
     loader = YouTubeDataLoader(str(db_path))
     loader.create_table()
     return loader

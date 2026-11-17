@@ -4,8 +4,8 @@ Known limitations and interpretation traps for the YouTube fandom dataset.
 
 ## Data Coverage
 
-- The dataset comes from YouTube search results for `heated rivalry`, not from a complete catalog of every relevant video.
-- YouTube may return videos that use the phrase "heated rivalry" but are unrelated to the show, book, or fandom.
+- The dataset comes from YouTube search results for a specific fandom topic, not from a complete catalog of every relevant video.
+- YouTube may return videos that match the search phrase but are unrelated to the target fandom or topic.
 - The fetch can stop below the requested target count when YouTube stops returning additional pages.
 - Duplicate videos can appear across search result pages; the loader keeps one row per `videoId`.
 

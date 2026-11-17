@@ -73,7 +73,7 @@ The deterministic SQL agent should add handlers for:
 
 - Channels ranked by average views.
 - Tags ranked by average views.
-- Videos tagged with `heated rivalry` compared with videos without that tag.
+- Videos tagged with a target fandom keyword compared with videos without that tag.
 
 These questions are likely answerable from the current data, but the V1 golden-query agent may not support them until those handlers exist.
 

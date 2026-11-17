@@ -13,7 +13,7 @@ from src.agents.simple_sql_agent import SimpleSQLAgent
 
 DEFAULT_QUESTIONS_PATH = "evals/questions_v1.json"
 DEFAULT_OUTPUT_PATH = "evals/results/simple_sql_agent_v1.jsonl"
-DEFAULT_DB_PATH = "data/processed/heated_rivalry.db"
+DEFAULT_DB_PATH = "data/processed/youtube_fandom.db"
 
 
 def load_questions(path: str) -> List[Dict[str, Any]]:

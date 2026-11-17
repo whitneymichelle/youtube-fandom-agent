@@ -29,7 +29,7 @@ class AgentAnswer:
 class SimpleSQLAgent:
     """Answer simple metric questions from the modeled SQLite tables."""
 
-    def __init__(self, db_path: str = "data/processed/heated_rivalry.db"):
+    def __init__(self, db_path: str = "data/processed/youtube_fandom.db"):
         self.db_path = db_path
         self.handlers: Sequence[Callable[[str], Optional[AgentAnswer]]] = (
             self._video_count,
@@ -741,7 +741,7 @@ def main() -> None:
     parser.add_argument("question", help="Question to answer from the modeled DB")
     parser.add_argument(
         "--db",
-        default="data/processed/heated_rivalry.db",
+        default="data/processed/youtube_fandom.db",
         help="Path to SQLite database",
     )
     args = parser.parse_args()
