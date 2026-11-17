@@ -61,12 +61,12 @@ If you need local API config, create a `.env` file in the repo root with your Yo
 python -m src.evaluation.run_eval
 ```
 
-This writes results to `evals/results/simple_sql_agent.jsonl` and opens the HTML dashboard automatically.
+This writes results to `evals/results/simple_sql_agent.jsonl`.
 
-To disable the browser open step:
+To generate and open the HTML dashboard after the run:
 
 ```bash
-python -m src.evaluation.run_eval --no-open-report
+python -m src.evaluation.run_eval --open-report
 ```
 
 To use a different results file and a different review output:

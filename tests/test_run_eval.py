@@ -1,5 +1,7 @@
 import json
+import sys
 
+import src.evaluation.run_eval as eval_module
 from src.evaluation.run_eval import run_eval
 from tests.test_simple_sql_agent import create_agent_db
 
@@ -54,6 +56,23 @@ def test_run_eval_writes_jsonl_results_and_summary(tmp_path):
     assert result_rows[1]["question_id"] == "q002"
     assert result_rows[1]["support_level"] == "unsupported"
     assert result_rows[1]["needs_human_score"] is True
+
+
+def test_main_only_opens_report_when_requested(monkeypatch):
+    calls = {"export": 0, "browser": 0}
+
+    monkeypatch.setattr(eval_module, "run_eval", lambda **kwargs: {"output_path": "evals/results/test.jsonl"})
+    monkeypatch.setattr(eval_module, "print_summary", lambda summary: None)
+    monkeypatch.setattr(eval_module, "export_review", lambda **kwargs: calls.__setitem__("export", calls["export"] + 1))
+    monkeypatch.setattr(eval_module.webbrowser, "open", lambda *args, **kwargs: calls.__setitem__("browser", calls["browser"] + 1))
+
+    monkeypatch.setattr(sys, "argv", ["run_eval"])
+    eval_module.main()
+    assert calls == {"export": 0, "browser": 0}
+
+    monkeypatch.setattr(sys, "argv", ["run_eval", "--open-report"])
+    eval_module.main()
+    assert calls == {"export": 1, "browser": 1}
 
 
 def test_default_eval_questions_are_realistic_and_regression_safe():

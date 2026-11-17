@@ -142,7 +142,7 @@ def main() -> None:
     parser.add_argument(
         "--open-report",
         action=argparse.BooleanOptionalAction,
-        default=True,
+        default=False,
         help="Open the generated HTML review dashboard after the eval completes.",
     )
     args = parser.parse_args()
