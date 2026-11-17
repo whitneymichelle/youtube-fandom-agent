@@ -7,8 +7,10 @@ import argparse
 import json
 from pathlib import Path
 from typing import Any, Dict, List
+import webbrowser
 
 from src.agents.simple_sql_agent import SimpleSQLAgent
+from src.evaluation.export_review import export_review
 
 
 DEFAULT_QUESTIONS_PATH = "evals/questions.json"
@@ -137,6 +139,12 @@ def main() -> None:
         default=DEFAULT_DB_PATH,
         help="Path to SQLite database",
     )
+    parser.add_argument(
+        "--open-report",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Open the generated HTML review dashboard after the eval completes.",
+    )
     args = parser.parse_args()
 
     summary = run_eval(
@@ -145,6 +153,15 @@ def main() -> None:
         db_path=args.db,
     )
     print_summary(summary)
+
+    if args.open_report:
+        review_path = str(Path(args.output).with_name("simple_sql_agent_review.html"))
+        export_review(
+            results_path=args.output,
+            review_path=review_path,
+            overwrite=True,
+        )
+        webbrowser.open(f"file://{Path(review_path).resolve()}")
 
 
 if __name__ == "__main__":

@@ -1,15 +1,16 @@
 """
-Export JSONL eval results into a human-readable review Markdown file.
+Export JSONL eval results into a simple HTML dashboard for human review.
 """
 
 import argparse
 import json
+from html import escape
 from pathlib import Path
 from typing import Any, Dict, List
 
 
-DEFAULT_RESULTS_PATH = "evals/results/simple_sql_agent_v1.jsonl"
-DEFAULT_REVIEW_PATH = "evals/reviews/simple_sql_agent_v1_review.md"
+DEFAULT_RESULTS_PATH = "evals/results/simple_sql_agent.jsonl"
+DEFAULT_REVIEW_PATH = "evals/reviews/simple_sql_agent_review.html"
 
 
 def load_jsonl(path: str) -> List[Dict[str, Any]]:
@@ -57,41 +58,128 @@ def render_review(
     all_results: List[Dict[str, Any]],
     results_path: str,
 ) -> str:
-    lines = [
-        "# Simple SQL Agent V1 Review",
-        "",
-        f"Source results: `{results_path}`",
-        "",
-    ]
-    lines.extend(render_summary(review_results, all_results))
-    lines.extend(
-        [
-            "",
-            "## Review Instructions",
-            "",
-            "Score each answer after reading the question, answer, SQL, self-check, and limitations.",
-            "",
-            "Scoring:",
-            "",
-            "- Correctness: `0` wrong/unsupported, `1` partially correct, `2` correct but thin, `3` correct and well-supported",
-            "- Groundedness: `0` not grounded, `1` weakly grounded, `2` mostly grounded, `3` properly grounded in schema/results",
-            "- Self-awareness: `0` overconfident/wrong, `1` vague, `2` mostly aware but incomplete, `3` accurately states support or limits",
-            "",
-            "When feedback reveals a recurring failure, update the relevant system artifact: `docs/schema.md`, `docs/semantic_model.md`, `docs/gotchas.md`, `docs/agent_rules.md`, eval questions, examples, agent code, or tests.",
-            "",
-        ]
-    )
+    summary_html = render_summary(review_results, all_results)
+    cards_html = "\n".join(render_result(result) for result in review_results)
 
-    for result in review_results:
-        lines.extend(render_result(result))
-
-    return "\n".join(lines).rstrip() + "\n"
+    return f"""<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>Simple SQL Agent Review</title>
+  <style>
+    :root {{
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --border: #dfe6ee;
+      --text: #182230;
+      --muted: #5c6d82;
+      --primary: #2563eb;
+      --supported: #166534;
+      --unsupported: #991b1b;
+      --partial: #92400e;
+      --card-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.5;
+    }}
+    .container {{ max-width: 1200px; margin: 0 auto; padding: 32px 20px 64px; }}
+    h1 {{ margin-bottom: 8px; }}
+    .meta {{ color: var(--muted); margin-bottom: 24px; }}
+    .summary-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }}
+    .stat {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 16px;
+      box-shadow: var(--card-shadow);
+    }}
+    .stat-label {{ font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }}
+    .stat-value {{ font-size: 28px; font-weight: 700; margin-top: 6px; }}
+    .panel {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      margin-top: 18px;
+    }}
+    .badge {{
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 8px;
+    }}
+    .supported {{ background: #dcfce7; color: var(--supported); }}
+    .unsupported {{ background: #fee2e2; color: var(--unsupported); }}
+    .partially_supported {{ background: #fef3c7; color: var(--partial); }}
+    .result-card {{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 22px;
+      box-shadow: var(--card-shadow);
+    }}
+    .result-header {{
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }}
+    .meta-list {{ color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; }}
+    pre {{
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      overflow-x: auto;
+    }}
+    .section {{ margin-top: 20px; }}
+    .section h3 {{ margin-bottom: 8px; font-size: 16px; }}
+    .limitations {{ margin: 0; padding-left: 18px; }}
+    a {{ color: var(--primary); }}
+  </style>
+</head>
+<body>
+  <div class=\"container\">
+    <h1>Simple SQL Agent Review</h1>
+    <div class=\"meta\">Source results: {escape(results_path)}</div>
+    {summary_html}
+    <div class=\"panel\">
+      <h2>Review weak cases</h2>
+      <p>Use this dashboard to inspect unsupported, partially supported, and human-review-needed questions.</p>
+    </div>
+    {cards_html}
+  </div>
+</body>
+</html>
+"""
 
 
 def render_summary(
     review_results: List[Dict[str, Any]],
     all_results: List[Dict[str, Any]],
-) -> List[str]:
+) -> str:
     support_counts = count_by(all_results, "support_level")
     difficulty_counts = count_by(review_results, "difficulty")
     answer_type_counts = count_by(review_results, "answer_type")
@@ -99,43 +187,46 @@ def render_summary(
     human_review_needed = sum(
         1 for result in all_results if result["needs_human_score"]
     )
-    review_question_ids = ", ".join(result["question_id"] for result in review_results)
 
-    lines = [
-        "## Summary",
-        "",
-        f"- Total eval questions: `{len(all_results)}`",
-        f"- Review items in this file: `{len(review_results)}`",
-        f"- Human review needed: `{human_review_needed}`",
-        f"- Answered with SQL: `{answered_with_sql}`",
-        f"- Answered without SQL: `{len(all_results) - answered_with_sql}`",
-        "",
-        "Support levels:",
+    def stat(label: str, value: str) -> str:
+        return f"""
+        <div class=\"stat\">
+          <div class=\"stat-label\">{escape(label)}</div>
+          <div class=\"stat-value\">{escape(value)}</div>
+        </div>
+        """
+
+    rows = [
+        stat("Total eval questions", str(len(all_results))),
+        stat("Review items", str(len(review_results))),
+        stat("Human review needed", str(human_review_needed)),
+        stat("Answered with SQL", str(answered_with_sql)),
     ]
-    lines.extend(
-        f"- `{support_level}`: `{count}`"
-        for support_level, count in support_counts.items()
-    )
 
-    lines.extend(["", "Review item difficulty:"])
-    lines.extend(
-        f"- `{difficulty}`: `{count}`"
-        for difficulty, count in difficulty_counts.items()
+    support_markup = "".join(
+        f"<span class=\"badge {escape(str(support).lower())}\">{escape(str(support))}: {count}</span>"
+        for support, count in support_counts.items()
     )
-
-    lines.extend(["", "Review item answer types:"])
-    lines.extend(
-        f"- `{answer_type}`: `{count}`"
+    difficulty_markup = "".join(
+        f"<span class=\"badge supported\">{escape(str(level))}: {count}</span>"
+        for level, count in difficulty_counts.items()
+    )
+    answer_type_markup = "".join(
+        f"<span class=\"badge supported\">{escape(str(answer_type))}: {count}</span>"
         for answer_type, count in answer_type_counts.items()
     )
 
-    lines.extend(
-        [
-            "",
-            f"Review question IDs: `{review_question_ids}`",
-        ]
-    )
-    return lines
+    return f"""
+    <div class=\"summary-grid\">
+      {''.join(rows)}
+    </div>
+    <div class=\"panel\">
+      <h2>Summary</h2>
+      <p><strong>Support levels:</strong> {support_markup}</p>
+      <p><strong>Review difficulty:</strong> {difficulty_markup}</p>
+      <p><strong>Answer types:</strong> {answer_type_markup}</p>
+    </div>
+    """
 
 
 def count_by(records: List[Dict[str, Any]], key: str) -> Dict[str, int]:
@@ -146,75 +237,53 @@ def count_by(records: List[Dict[str, Any]], key: str) -> Dict[str, int]:
     return dict(sorted(counts.items()))
 
 
-def render_result(result: Dict[str, Any]) -> List[str]:
-    lines = [
-        f"## {result['question_id']}: {result['question']}",
-        "",
-        f"- Difficulty: `{result['difficulty']}`",
-        f"- Answer type: `{result['answer_type']}`",
-        f"- Requires human review: `{result['requires_human_review']}`",
-        f"- Support level: `{result['support_level']}`",
-        "",
-        "### Agent Answer",
-        "",
-        result["agent_answer"],
-        "",
-        "### SQL",
-        "",
-    ]
+def render_result(result: Dict[str, Any]) -> str:
+    support_class = str(result.get("support_level", "unsupported")).lower()
+    limitations = result.get("limitations") or []
+    limitations_html = "".join(
+        f"<li>{escape(str(item))}</li>" for item in limitations
+    ) or "<li>None stated.</li>"
+    rows_json = json.dumps(result.get("rows", []), ensure_ascii=False, indent=2)
+    sql = result.get("sql") or "No SQL used."
 
-    if result["sql"]:
-        lines.extend(["```sql", result["sql"].strip(), "```"])
-    else:
-        lines.append("No SQL used.")
+    return f"""
+    <div class=\"result-card\">
+      <div class=\"result-header\">
+        <h2>{escape(str(result['question_id']))}: {escape(str(result['question']))}</h2>
+        <div class=\"badge {escape(support_class)}\">{escape(str(result.get('support_level', 'unsupported')))}</div>
+      </div>
+      <div class=\"meta-list\">
+        <span>Difficulty: {escape(str(result.get('difficulty', 'unknown')))}</span>
+        <span>Answer type: {escape(str(result.get('answer_type', 'unknown')))}</span>
+        <span>Human review: {escape(str(result.get('requires_human_review', False)))}</span>
+      </div>
 
-    lines.extend(
-        [
-            "",
-            "### Rows",
-            "",
-            "```json",
-            json.dumps(result["rows"], ensure_ascii=False, indent=2),
-            "```",
-            "",
-            "### Self-Check",
-            "",
-            result["self_check"],
-            "",
-            "### Limitations",
-            "",
-        ]
-    )
+      <div class=\"section\">
+        <h3>Agent answer</h3>
+        <p>{escape(str(result.get('agent_answer', '')))}</p>
+      </div>
 
-    if result["limitations"]:
-        lines.extend(f"- {limitation}" for limitation in result["limitations"])
-    else:
-        lines.append("- None stated.")
+      <div class=\"section\">
+        <h3>SQL</h3>
+        <pre>{escape(str(sql))}</pre>
+      </div>
 
-    if result.get("expected_limitation"):
-        lines.extend(
-            [
-                "",
-                "### Expected Limitation",
-                "",
-                result["expected_limitation"],
-            ]
-        )
+      <div class=\"section\">
+        <h3>Rows</h3>
+        <pre>{escape(rows_json)}</pre>
+      </div>
 
-    lines.extend(
-        [
-            "",
-            "### Human Review",
-            "",
-            "- Correctness: ",
-            "- Groundedness: ",
-            "- Self-awareness: ",
-            "- Notes: ",
-            "- Follow-up artifact updates: ",
-            "",
-        ]
-    )
-    return lines
+      <div class=\"section\">
+        <h3>Self-check</h3>
+        <p>{escape(str(result.get('self_check', '')))}</p>
+      </div>
+
+      <div class=\"section\">
+        <h3>Limitations</h3>
+        <ul class=\"limitations\">{limitations_html}</ul>
+      </div>
+    </div>
+    """
 
 
 def print_summary(summary: Dict[str, Any]) -> None:
@@ -226,7 +295,7 @@ def print_summary(summary: Dict[str, Any]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Export eval JSONL to Markdown.")
+    parser = argparse.ArgumentParser(description="Export eval JSONL to an HTML review dashboard.")
     parser.add_argument(
         "--results",
         default=DEFAULT_RESULTS_PATH,
@@ -235,7 +304,7 @@ def main() -> None:
     parser.add_argument(
         "--review",
         default=DEFAULT_REVIEW_PATH,
-        help="Path to write Markdown review file",
+        help="Path to write HTML review file",
     )
     parser.add_argument(
         "--human-only",

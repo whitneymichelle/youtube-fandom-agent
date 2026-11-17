@@ -35,9 +35,9 @@ def make_result(question_id, needs_human_score):
     }
 
 
-def test_export_review_writes_markdown_template(tmp_path):
+def test_export_review_writes_html_dashboard(tmp_path):
     results_path = tmp_path / "results.jsonl"
-    review_path = tmp_path / "review.md"
+    review_path = tmp_path / "review.html"
     write_jsonl(
         results_path,
         [make_result("q001", False), make_result("q002", True)],
@@ -48,23 +48,19 @@ def test_export_review_writes_markdown_template(tmp_path):
 
     assert summary["total_results"] == 2
     assert summary["review_items"] == 2
-    assert "## Summary" in review
-    assert "- Total eval questions: `2`" in review
-    assert "- Review items in this file: `2`" in review
-    assert "- Answered with SQL: `2`" in review
-    assert "Review question IDs: `q001, q002`" in review
-    assert "## Review Instructions" in review
-    assert "## q001: Question q001?" in review
-    assert "## q002: Question q002?" in review
-    assert "- Correctness: " in review
-    assert "- Groundedness: " in review
-    assert "- Self-awareness: " in review
-    assert "Follow-up artifact updates" in review
+    assert "<title>Simple SQL Agent Review</title>" in review
+    assert "<h2>Summary</h2>" in review
+    assert "Total eval questions" in review
+    assert "q001" in review
+    assert "q002" in review
+    assert "Agent answer" in review
+    assert "Self-check" in review
+    assert "Review weak cases" in review
 
 
 def test_export_review_can_filter_to_human_review_items(tmp_path):
     results_path = tmp_path / "results.jsonl"
-    review_path = tmp_path / "review.md"
+    review_path = tmp_path / "review.html"
     write_jsonl(
         results_path,
         [make_result("q001", False), make_result("q002", True)],
@@ -76,16 +72,13 @@ def test_export_review_can_filter_to_human_review_items(tmp_path):
     assert summary["total_results"] == 2
     assert summary["review_items"] == 1
     assert summary["human_only"] is True
-    assert "- Total eval questions: `2`" in review
-    assert "- Review items in this file: `1`" in review
-    assert "Review question IDs: `q002`" in review
-    assert "## q001: Question q001?" not in review
-    assert "## q002: Question q002?" in review
+    assert "q002" in review
+    assert "q001" not in review
 
 
 def test_export_review_refuses_to_overwrite_existing_review(tmp_path):
     results_path = tmp_path / "results.jsonl"
-    review_path = tmp_path / "review.md"
+    review_path = tmp_path / "review.html"
     write_jsonl(results_path, [make_result("q001", True)])
     review_path.write_text("human notes\n", encoding="utf-8")
 
@@ -97,7 +90,7 @@ def test_export_review_refuses_to_overwrite_existing_review(tmp_path):
 
 def test_export_review_can_overwrite_existing_review_when_requested(tmp_path):
     results_path = tmp_path / "results.jsonl"
-    review_path = tmp_path / "review.md"
+    review_path = tmp_path / "review.html"
     write_jsonl(results_path, [make_result("q001", True)])
     review_path.write_text("old review\n", encoding="utf-8")
 
@@ -106,4 +99,4 @@ def test_export_review_can_overwrite_existing_review_when_requested(tmp_path):
 
     assert summary["overwrite"] is True
     assert "old review" not in review
-    assert "## q001: Question q001?" in review
+    assert "q001" in review
