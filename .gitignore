@@ -40,6 +40,8 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/comments_full/
+data/comments_test/
 
 # Jupyter
 .ipynb_checkpoints/
