@@ -133,5 +133,23 @@
     "expected_tables": ["fact_videos", "fact_video_topics", "fact_video_tags"],
     "expected_metrics": ["avg_views", "video_count", "tag_occurrence_count"],
     "requires_human_review": true
+  },
+  {
+    "id": "q015",
+    "question": "What themes show up most often in the comments for the most-watched videos?",
+    "difficulty": "hard",
+    "answer_type": "answerability",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["comment_count"],
+    "requires_human_review": true
+  },
+  {
+    "id": "q016",
+    "question": "Which videos seem to trigger the strongest disagreement or backlash in the comments?",
+    "difficulty": "hard",
+    "answer_type": "answerability",
+    "expected_tables": ["fact_videos"],
+    "expected_metrics": ["comment_count"],
+    "requires_human_review": true
   }
 ]
