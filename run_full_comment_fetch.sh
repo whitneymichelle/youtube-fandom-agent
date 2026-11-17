@@ -251,7 +251,7 @@ while (( offset < TOTAL_IDS )); do
     output_dir="$OUTPUT_ROOT/batch_$((offset / BATCH_SIZE + 1))"
   fi
 
-  cmd=(python fetch_video_comments.py --from-json "$RAW_DIR" --output-dir "$output_dir" --batch-size "$current_batch" --batch-offset "$offset" --max-pages "$MAX_PAGES")
+  cmd=(python scripts/fetch_video_comments.py --from-json "$RAW_DIR" --output-dir "$output_dir" --batch-size "$current_batch" --batch-offset "$offset" --max-pages "$MAX_PAGES")
 
   echo "Batch ${batch_number}: offset=$offset size=$current_batch"
   if [[ "$DRY_RUN" == true ]]; then
