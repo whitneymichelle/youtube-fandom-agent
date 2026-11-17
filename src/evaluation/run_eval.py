@@ -11,8 +11,8 @@ from typing import Any, Dict, List
 from src.agents.simple_sql_agent import SimpleSQLAgent
 
 
-DEFAULT_QUESTIONS_PATH = "evals/questions_v1.json"
-DEFAULT_OUTPUT_PATH = "evals/results/simple_sql_agent_v1.jsonl"
+DEFAULT_QUESTIONS_PATH = "evals/questions.json"
+DEFAULT_OUTPUT_PATH = "evals/results/simple_sql_agent.jsonl"
 DEFAULT_DB_PATH = "data/processed/youtube_fandom.db"
 
 

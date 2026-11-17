@@ -54,3 +54,14 @@ def test_run_eval_writes_jsonl_results_and_summary(tmp_path):
     assert result_rows[1]["question_id"] == "q002"
     assert result_rows[1]["support_level"] == "unsupported"
     assert result_rows[1]["needs_human_score"] is True
+
+
+def test_default_eval_questions_are_realistic_and_regression_safe():
+    with open("evals/questions.json", encoding="utf-8") as f:
+        questions = json.load(f)
+
+    assert len(questions) >= 12
+    assert {q["answer_type"] for q in questions} >= {"exact", "grouped", "comparison"}
+    assert any("what" in q["question"].lower() for q in questions)
+    assert any("which" in q["question"].lower() for q in questions)
+    assert any("do " in q["question"].lower() for q in questions)
