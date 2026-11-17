@@ -13,6 +13,14 @@ The database has two layers:
 - Source/staging tables preserve loaded API-shaped data.
 - Modeled tables reshape the data for analysis.
 
+This repo also includes non-database artifacts outside the SQLite layer:
+
+- `data/raw/` stores raw fetched JSON batches.
+- `data/curated/` stores reviewed or curated labels for relevance and quality checks.
+- `data/comments_full/` and `data/comments_test/` store fetched comment text outputs. These are evidence files, not core SQL tables.
+
+The comment text is intentionally separate from the modeled SQLite tables because the project does not treat comments as a complete ground truth signal for fandom identity or sentiment. Instead, comment exports are a secondary evidence layer for nuance, context, tone, and recurrent themes. They are most valuable as comment-based pattern evidence rather than as definitive proof of fandom sentiment or community consensus.
+
 ## Source/Staging Tables
 
 ### `videos`

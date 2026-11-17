@@ -19,8 +19,11 @@ Known limitations and interpretation traps for the YouTube fandom dataset.
 ## Comments
 
 - The database has `commentCount`, but not comment text.
-- The agent cannot answer what viewers said, how fans felt in comments, or comment sentiment from the current database.
+- The agent cannot answer what viewers said, how fans felt in comments, or comment sentiment from the current database alone.
 - Comment count can support engagement-volume analysis, but not sentiment analysis.
+- Comment text is a secondary evidence source for context, tone, recurring themes, and nuance when it is fetched separately.
+- Comment evidence should be treated as a pattern signal from a fetch-time snapshot, not as a definitive measure of fandom identity or community sentiment.
+- Observations from comments should be framed as comment-based patterns or themes rather than universal truths about the fandom.
 
 ## Tags
 

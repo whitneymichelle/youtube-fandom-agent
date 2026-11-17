@@ -51,6 +51,8 @@ This distinction matters during eval review. A correct refusal because comment t
 ## Uncertainty
 
 - Do not infer fan sentiment from `commentCount`; the database does not include comment text.
+- Do not treat comments as definitive evidence of fandom identity or community sentiment. When comment text is available, treat it as a secondary evidence source for themes, tone, and context.
+- Comment-based observations should be described as patterns in comment data rather than absolute truths about the fandom.
 - Do not treat YouTube tags as exhaustive; many videos have no tags.
 - Do not treat broad YouTube categories as fandom-specific labels.
 - Do not imply that view, like, or comment counts are current; they are snapshots from fetch time.

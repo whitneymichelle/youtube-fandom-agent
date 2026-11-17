@@ -18,6 +18,8 @@ The modeled tables are:
 
 Use `videos` and `youtube_categories` as source/staging tables only. Agent-facing analysis should prefer the modeled tables.
 
+Important: the SQL schema does not include comment text or curated labels. Comment exports under `data/comments_full/` and `data/comments_test/` are evidence add-ons, while curated files in `data/curated/` are review artifacts used to label relevance or quality rather than to define the core agent schema.
+
 ## Model Row Counts
 
 Use these metrics when the question asks how many rows exist in a table/model.

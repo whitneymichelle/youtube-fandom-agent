@@ -7,18 +7,24 @@ An LLM-powered agent that retrieves YouTube video data and answers increasingly 
 ```
 youtube-fandom-agent/
 ├── data/
-│   ├── raw/              # YouTube API responses
-│   └── processed/        # Cleaned and prepared data
+│   ├── raw/              # Original YouTube API batches
+│   ├── curated/          # Human-reviewed labels or curated subsets
+│   ├── processed/        # SQLite database and modeled outputs
+│   ├── comments_full/    # Generated comment text exports (not committed)
+│   └── comments_test/    # Smaller comment data slices for testing
 ├── src/
-│   ├── youtube_api/      # YouTube data fetching
-│   ├── agents/           # LLM agent implementations
-│   ├── evaluation/       # Evaluation framework
+│   ├── youtube_api/      # YouTube API client and loader logic
+│   ├── agents/           # Agent implementations
+│   ├── evaluation/       # Eval workflow and review export tools
 │   └── utils/            # Helper utilities
+├── scripts/              # Runnable fetch entrypoints
 ├── notebooks/            # Jupyter notebooks for exploration
 ├── tests/                # Unit tests
 ├── docs/                 # Project documentation
-├── config.example.py     # Example configuration
-└── requirements.txt      # Python dependencies
+├── requirements.txt      # Python dependencies
+├── .gitignore            # Ignores generated data and local secrets
+├── Makefile              # Common project commands
+└── README.md             # Project overview
 ```
 
 ## Setup
@@ -31,14 +37,14 @@ youtube-fandom-agent/
    pip install -r requirements.txt
    ```
 
-2. **Configure API keys:**
+2. **Configure the YouTube API key locally:**
    ```bash
-   cp config.example.py config.py
-   # Edit config.py with your YouTube API key
+   echo "YOUTUBE_API_KEY=your-key" > .env
    ```
+   The app reads this from the environment via `python-dotenv`.
 
 3. **Start developing:**
-   - Explore data fetching in `notebooks/`
+   - Explore data fetching in `scripts/` and `notebooks/`
    - Build agent logic in `src/agents/`
    - Define evaluations in `src/evaluation/`
 
@@ -47,13 +53,25 @@ youtube-fandom-agent/
 This repo is intentionally simple: ship a useful baseline agent, collect real signals from the data, and improve it incrementally over time.
 
 The current workflow is:
-- collect YouTube metadata and related raw data
-- model it into a reliable SQLite layer
-- answer a narrow set of structured questions with a deterministic SQL agent
-- add richer evidence as it becomes available, such as comments, transcripts, or additional retrieval sources
+- collect YouTube metadata into `data/raw/`
+- model it into a reliable SQLite layer under `data/processed/`
+- keep curated judgment files in `data/curated/` when they are human-reviewed source artifacts
+- add richer evidence as it becomes available, such as comment text exports in `data/comments_full/` or smaller test slices in `data/comments_test/`
+- answer narrow structured questions with a deterministic SQL agent
 - improve the agent without reworking the whole project into separate permanent phases
 
 The important idea is not a formal "phase plan" but a continuous loop of better data, better prompts, better queries, and better evaluations.
+
+## Data Layer Overview
+
+This project keeps several kinds of data separate:
+
+- `data/raw/`: raw JSON returned by the YouTube API; historical fetch snapshots
+- `data/curated/`: smaller reviewed or curated label sets used for evaluation and relevance checks
+- `data/processed/`: SQLite database and modeled tables used by the agent
+- `data/comments_full/` and `data/comments_test/`: generated comment text exports; useful evidence, but not the same thing as the core modeled database
+
+The curated label files and the processed SQLite tables are the versioned source artifacts. Generated comment JSONL exports are runtime artifacts and are intentionally kept out of git.
 
 ## Evaluation System
 
