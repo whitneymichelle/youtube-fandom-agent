@@ -237,6 +237,61 @@ def count_by(records: List[Dict[str, Any]], key: str) -> Dict[str, int]:
     return dict(sorted(counts.items()))
 
 
+def render_llm_evidence(result: Dict[str, Any]) -> str:
+    if result.get("grading_method") != "llm":
+        return ""
+
+    evidence_stats = []
+    for label, field in (("Comments retrieved", "comments_retrieved"), ("Comments used", "comments_used")):
+        if field in result:
+            evidence_stats.append(f"<span>{escape(label)}: {escape(str(result[field]))}</span>")
+
+    scores = []
+    for label, field in (
+        ("Groundedness", "groundedness"),
+        ("Interpretation quality", "interpretation_quality"),
+        ("Limitations", "limitations_score"),
+    ):
+        if field in result:
+            scores.append(
+                f"<span class=\"badge supported\">{escape(label)}: {escape(str(result[field]))}/5</span>"
+            )
+
+    sample_ids = result.get("sample_comment_ids") or []
+    sample_html = "".join(f"<li>{escape(str(comment_id))}</li>" for comment_id in sample_ids)
+
+    can_html = "".join(
+        f"<li>{escape(str(item))}</li>" for item in (result.get("can_determine") or [])
+    )
+    cannot_html = "".join(
+        f"<li>{escape(str(item))}</li>" for item in (result.get("cannot_determine") or [])
+    )
+
+    return f"""
+      <div class="section">
+        <h3>LLM grading</h3>
+        <div class="meta-list">{''.join(evidence_stats)}</div>
+        <p>{''.join(scores)}</p>
+      </div>
+      <div class="section">
+        <h3>Judge reasoning</h3>
+        <p>{escape(str(result.get('judge_reasoning', 'Not yet graded.')))}</p>
+      </div>
+      <div class="section">
+        <h3>Representative comment IDs</h3>
+        <ul class="limitations">{sample_html or '<li>None provided.</li>'}</ul>
+      </div>
+      <div class="section">
+        <h3>What can be determined</h3>
+        <ul class="limitations">{can_html or '<li>Not yet identified.</li>'}</ul>
+      </div>
+      <div class="section">
+        <h3>What cannot be determined</h3>
+        <ul class="limitations">{cannot_html or '<li>Not yet identified.</li>'}</ul>
+      </div>
+    """
+
+
 def render_result(result: Dict[str, Any]) -> str:
     support_class = str(result.get("support_level", "unsupported")).lower()
     limitations = result.get("limitations") or []
@@ -245,6 +300,8 @@ def render_result(result: Dict[str, Any]) -> str:
     ) or "<li>None stated.</li>"
     rows_json = json.dumps(result.get("rows", []), ensure_ascii=False, indent=2)
     sql = result.get("sql") or "No SQL used."
+
+    llm_evidence_html = render_llm_evidence(result)
 
     return f"""
     <div class=\"result-card\">
@@ -282,6 +339,8 @@ def render_result(result: Dict[str, Any]) -> str:
         <h3>Limitations</h3>
         <ul class=\"limitations\">{limitations_html}</ul>
       </div>
+
+      {llm_evidence_html}
     </div>
     """
 

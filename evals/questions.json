@@ -139,6 +139,9 @@
     "question": "What themes show up most often in the comments for the most-watched videos?",
     "difficulty": "hard",
     "answer_type": "answerability",
+    "grading_method": "llm",
+    "evidence_source": "comments",
+    "rubric": ["groundedness", "interpretation_quality", "limitations"],
     "expected_tables": ["fact_videos"],
     "expected_metrics": ["comment_count"],
     "requires_human_review": true
@@ -148,6 +151,9 @@
     "question": "Which videos seem to trigger the strongest disagreement or backlash in the comments?",
     "difficulty": "hard",
     "answer_type": "answerability",
+    "grading_method": "llm",
+    "evidence_source": "comments",
+    "rubric": ["groundedness", "interpretation_quality", "limitations"],
     "expected_tables": ["fact_videos"],
     "expected_metrics": ["comment_count"],
     "requires_human_review": true
