@@ -105,3 +105,33 @@ def test_default_eval_questions_are_realistic_and_regression_safe():
     assert any("what" in q["question"].lower() for q in questions)
     assert any("which" in q["question"].lower() for q in questions)
     assert any("do " in q["question"].lower() for q in questions)
+
+
+def test_run_eval_records_three_trials_and_numeric_score(tmp_path):
+    db_path = create_agent_db(tmp_path)
+    questions_path = tmp_path / "questions.json"
+    output_path = tmp_path / "results.jsonl"
+    questions = [
+        {
+            "id": "q002",
+            "question": "Can we tell what fans are saying in the comments?",
+            "difficulty": "hard",
+            "answer_type": "answerability",
+            "requires_human_review": True,
+        }
+    ]
+    questions_path.write_text(json.dumps(questions), encoding="utf-8")
+
+    run_eval(
+        questions_path=str(questions_path),
+        output_path=str(output_path),
+        db_path=str(db_path),
+        trial_count=3,
+    )
+
+    result = json.loads(output_path.read_text(encoding="utf-8").strip())
+    assert result["trial_count"] == 3
+    assert len(result["trials"]) == 3
+    assert result["average_score"] == 0.0
+    assert result["consistency_score"] == 5
+    assert result["overall_score"] == 0.0

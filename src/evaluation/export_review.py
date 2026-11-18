@@ -246,6 +246,19 @@ def render_llm_evidence(result: Dict[str, Any]) -> str:
         if field in result:
             evidence_stats.append(f"<span>{escape(label)}: {escape(str(result[field]))}</span>")
 
+    trial_stats = []
+    trial_count = result.get("trial_count")
+    if trial_count is not None:
+        trial_stats.append(f"<span>Trials: {escape(str(trial_count))}</span>")
+    for label, field in (
+        ("Average score", "average_score"),
+        ("Consistency", "consistency_score"),
+    ):
+        if field in result:
+            trial_stats.append(
+                f"<span class=\"badge supported\">{escape(label)}: {escape(str(result[field]))}/5</span>"
+            )
+
     scores = []
     for label, field in (
         ("Groundedness", "groundedness"),
@@ -270,7 +283,7 @@ def render_llm_evidence(result: Dict[str, Any]) -> str:
     return f"""
       <div class="section">
         <h3>LLM grading</h3>
-        <div class="meta-list">{''.join(evidence_stats)}</div>
+        <div class="meta-list">{''.join(trial_stats)} {''.join(evidence_stats)}</div>
         <p>{''.join(scores)}</p>
       </div>
       <div class="section">
@@ -302,6 +315,23 @@ def render_result(result: Dict[str, Any]) -> str:
     sql = result.get("sql") or "No SQL used."
 
     llm_evidence_html = render_llm_evidence(result)
+    trial_count = result.get("trial_count", 1)
+    average_score = result.get("average_score")
+    consistency_score = result.get("consistency_score")
+    score_html = ""
+    if average_score is not None:
+        score_html = f"""
+      <div class="section">
+        <h3>Numeric score</h3>
+        <div class="meta-list">
+          <span>Trials: {escape(str(trial_count))}</span>
+          <span class="badge supported">Average: {escape(str(average_score))}/5</span>
+          <span class="badge supported">Consistency: {escape(str(consistency_score))}/5</span>
+          <span class="badge supported">Overall: {escape(str(result.get('overall_score', average_score)))}/5</span>
+        </div>
+      </div>
+        """
+
     human_review_reasons = result.get("human_review_reasons") or []
     human_review_reasons_html = "".join(
         f"<li>{escape(str(reason))}</li>" for reason in human_review_reasons
@@ -345,6 +375,7 @@ def render_result(result: Dict[str, Any]) -> str:
       </div>
 
       {llm_evidence_html}
+      {score_html}
       <div class="section">
         <h3>Human review reasons</h3>
         <ul class="limitations">{human_review_reasons_html}</ul>

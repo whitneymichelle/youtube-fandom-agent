@@ -73,21 +73,61 @@ def build_human_review_status(
     }
 
 
+def capability_score(response_data: Dict[str, Any]) -> float:
+    support_level = response_data.get("support_level")
+    if support_level == "supported":
+        return 5.0
+    if support_level == "partially_supported":
+        return 3.0
+    return 0.0
+
+
+def trial_consistency_score(trials: List[Dict[str, Any]]) -> float:
+    if not trials:
+        return 0.0
+    signatures = []
+    for trial in trials:
+        signatures.append(
+            json.dumps(
+                {
+                    "answer": trial.get("agent_answer"),
+                    "sql": trial.get("sql"),
+                    "rows": trial.get("rows"),
+                    "support_level": trial.get("support_level"),
+                },
+                sort_keys=True,
+                ensure_ascii=False,
+            )
+        )
+    largest_group = max(signatures.count(signature) for signature in set(signatures))
+    return round((largest_group / len(trials)) * 5, 2)
+
+
 def run_eval(
     questions_path: str = DEFAULT_QUESTIONS_PATH,
     output_path: str = DEFAULT_OUTPUT_PATH,
     db_path: str = DEFAULT_DB_PATH,
+    trial_count: int = 1,
 ) -> Dict[str, Any]:
+    if trial_count < 1:
+        raise ValueError("trial_count must be at least 1")
+
     questions = load_questions(questions_path)
     agent = SimpleSQLAgent(db_path)
     results = []
 
     for question in questions:
-        response = agent.answer(question["question"])
-        response_data = asdict(response)
-        human_review_status = build_human_review_status(question, response_data)
-        results.append(
-            {
+        question_trial_count = question.get("trial_count", trial_count)
+        if question_trial_count < 1:
+            raise ValueError("question trial_count must be at least 1")
+
+        trials = []
+        for trial_number in range(1, question_trial_count + 1):
+            response = agent.answer(question["question"])
+            response_data = asdict(response)
+            human_review_status = build_human_review_status(question, response_data)
+            trial = {
+                "trial_number": trial_number,
                 "question_id": question["id"],
                 "question": question["question"],
                 "difficulty": question.get("difficulty"),
@@ -114,6 +154,25 @@ def run_eval(
                 "limitations": response_data["limitations"],
                 "needs_human_score": human_review_status["needs_human_score"],
                 "human_review_reasons": human_review_status["human_review_reasons"],
+            }
+            trial["capability_score"] = capability_score(trial)
+            trials.append(trial)
+
+        average_score = round(
+            sum(trial["capability_score"] for trial in trials) / len(trials),
+            2,
+        )
+        consistency_score = trial_consistency_score(trials)
+
+        first_trial = trials[0]
+        results.append(
+            {
+                **first_trial,
+                "trial_count": question_trial_count,
+                "trials": trials,
+                "average_score": average_score,
+                "consistency_score": consistency_score,
+                "overall_score": average_score,
             }
         )
 
@@ -189,6 +248,12 @@ def main() -> None:
         help="Path to SQLite database",
     )
     parser.add_argument(
+        "--trials",
+        type=int,
+        default=1,
+        help="Default trial count for questions without an explicit trial_count.",
+    )
+    parser.add_argument(
         "--open-report",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -200,6 +265,7 @@ def main() -> None:
         questions_path=args.questions,
         output_path=args.output,
         db_path=args.db,
+        trial_count=args.trials,
     )
     print_summary(summary)
 
