@@ -302,6 +302,10 @@ def render_result(result: Dict[str, Any]) -> str:
     sql = result.get("sql") or "No SQL used."
 
     llm_evidence_html = render_llm_evidence(result)
+    human_review_reasons = result.get("human_review_reasons") or []
+    human_review_reasons_html = "".join(
+        f"<li>{escape(str(reason))}</li>" for reason in human_review_reasons
+    ) or "<li>No automatic review trigger.</li>"
 
     return f"""
     <div class=\"result-card\">
@@ -341,6 +345,10 @@ def render_result(result: Dict[str, Any]) -> str:
       </div>
 
       {llm_evidence_html}
+      <div class="section">
+        <h3>Human review reasons</h3>
+        <ul class="limitations">{human_review_reasons_html}</ul>
+      </div>
     </div>
     """
 

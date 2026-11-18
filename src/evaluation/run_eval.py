@@ -31,6 +31,48 @@ def write_jsonl(path: str, records: List[Dict[str, Any]]) -> None:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def build_human_review_status(
+    question: Dict[str, Any],
+    response_data: Dict[str, Any],
+) -> Dict[str, Any]:
+    reasons = []
+
+    if question.get("requires_human_review", False):
+        reasons.append(str(question.get("review_reason", "Pre-tagged for human review")))
+
+    numeric_scores = [
+        response_data[field]
+        for field in (
+            "groundedness",
+            "interpretation_quality",
+            "limitations_score",
+            "overall_score",
+        )
+        if isinstance(response_data.get(field), (int, float))
+    ]
+    if numeric_scores and min(numeric_scores) < 3:
+        reasons.append("LLM score below review threshold")
+
+    comments_retrieved = response_data.get("comments_retrieved")
+    comments_used = response_data.get("comments_used")
+    if (
+        isinstance(comments_retrieved, int)
+        and comments_retrieved > 0
+        and isinstance(comments_used, int)
+        and comments_used == 0
+    ):
+        reasons.append("Comments retrieved but no comments used")
+
+    if response_data.get("support_level") == "unsupported":
+        reasons.append("Unsupported result")
+
+    unique_reasons = list(dict.fromkeys(reasons))
+    return {
+        "needs_human_score": bool(unique_reasons),
+        "human_review_reasons": unique_reasons,
+    }
+
+
 def run_eval(
     questions_path: str = DEFAULT_QUESTIONS_PATH,
     output_path: str = DEFAULT_OUTPUT_PATH,
@@ -43,6 +85,7 @@ def run_eval(
     for question in questions:
         response = agent.answer(question["question"])
         response_data = asdict(response)
+        human_review_status = build_human_review_status(question, response_data)
         results.append(
             {
                 "question_id": question["id"],
@@ -69,7 +112,8 @@ def run_eval(
                 "support_level": response_data["support_level"],
                 "self_check": response_data["self_check"],
                 "limitations": response_data["limitations"],
-                "needs_human_score": question.get("requires_human_review", True),
+                "needs_human_score": human_review_status["needs_human_score"],
+                "human_review_reasons": human_review_status["human_review_reasons"],
             }
         )
 

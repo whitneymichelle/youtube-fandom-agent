@@ -58,6 +58,27 @@ def test_run_eval_writes_jsonl_results_and_summary(tmp_path):
     assert result_rows[1]["needs_human_score"] is True
 
 
+def test_human_review_status_combines_static_and_dynamic_triggers():
+    question = {
+        "requires_human_review": True,
+        "review_reason": "Comment interpretation is subjective",
+    }
+    response = {
+        "support_level": "unsupported",
+        "groundedness": 2,
+        "comments_retrieved": 482,
+        "comments_used": 0,
+    }
+
+    status = eval_module.build_human_review_status(question, response)
+
+    assert status["needs_human_score"] is True
+    assert "Comment interpretation is subjective" in status["human_review_reasons"]
+    assert "LLM score below review threshold" in status["human_review_reasons"]
+    assert "Comments retrieved but no comments used" in status["human_review_reasons"]
+    assert "Unsupported result" in status["human_review_reasons"]
+
+
 def test_main_only_opens_report_when_requested(monkeypatch):
     calls = {"export": 0, "browser": 0}
 
