@@ -4,10 +4,14 @@ Run an eval question set against the deterministic SQL agent.
 
 from dataclasses import asdict
 import argparse
+import hashlib
 import json
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
 import webbrowser
+from datetime import datetime, timezone
+import uuid
 
 from src.agents.simple_sql_agent import SimpleSQLAgent
 from src.evaluation.export_review import export_review
@@ -16,6 +20,7 @@ from src.evaluation.export_review import export_review
 DEFAULT_QUESTIONS_PATH = "evals/questions.json"
 DEFAULT_OUTPUT_PATH = "evals/results/simple_sql_agent.jsonl"
 DEFAULT_DB_PATH = "data/processed/youtube_fandom.db"
+DEFAULT_HISTORY_PATH = "evals/history/runs.jsonl"
 
 
 def load_questions(path: str) -> List[Dict[str, Any]]:
@@ -108,6 +113,7 @@ def run_eval(
     output_path: str = DEFAULT_OUTPUT_PATH,
     db_path: str = DEFAULT_DB_PATH,
     trial_count: int = 1,
+    history_path: str | None = None,
 ) -> Dict[str, Any]:
     if trial_count < 1:
         raise ValueError("trial_count must be at least 1")
@@ -177,7 +183,49 @@ def run_eval(
         )
 
     write_jsonl(output_path, results)
-    return summarize_results(results, output_path)
+    summary = summarize_results(results, output_path)
+
+    question_scores = []
+    deterministic_scores = []
+    llm_scores = []
+    for result in results:
+        score = result.get("overall_score", 0.0)
+        question_scores.append(
+            {
+                "question_id": result["question_id"],
+                "question": result["question"],
+                "grading_method": result.get("grading_method", "deterministic"),
+                "support_level": result["support_level"],
+                "average_score": score,
+                "consistency_score": result.get("consistency_score", 5.0),
+                "overall_score": score,
+                "needs_human_score": result["needs_human_score"],
+            }
+        )
+        if result.get("grading_method") == "llm":
+            llm_scores.append(score)
+        else:
+            deterministic_scores.append(score)
+
+    questions_bytes = Path(questions_path).read_bytes()
+    average = lambda values: round(sum(values) / len(values), 2) if values else None
+    snapshot = {
+        "run_id": str(uuid.uuid4()),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        **get_git_metadata(),
+        "agent": "simple_sql_agent",
+        "question_set_hash": hashlib.sha256(questions_bytes).hexdigest(),
+        "question_count": len(results),
+        "overall_score": average([q["overall_score"] for q in question_scores]),
+        "deterministic_score": average(deterministic_scores),
+        "llm_score": average(llm_scores),
+        "unsupported_count": sum(r["support_level"] == "unsupported" for r in results),
+        "human_review_count": summary["human_review_needed"],
+        "questions": question_scores,
+    }
+    if history_path:
+        append_history_snapshot(history_path, snapshot)
+    return summary
 
 
 def summarize_results(
@@ -230,6 +278,32 @@ def print_summary(summary: Dict[str, Any]) -> None:
         print(f"  {answer_type}: {count}")
 
 
+def get_git_metadata() -> Dict[str, Any]:
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        return {"git_commit": commit, "git_dirty": bool(status)}
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return {"git_commit": None, "git_dirty": None}
+
+
+def append_history_snapshot(history_path: str, snapshot: Dict[str, Any]) -> None:
+    path = Path(history_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(snapshot, ensure_ascii=False) + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the simple SQL agent eval.")
     parser.add_argument(
@@ -259,6 +333,16 @@ def main() -> None:
         default=False,
         help="Open the generated HTML review dashboard after the eval completes.",
     )
+    parser.add_argument(
+        "--history",
+        default=DEFAULT_HISTORY_PATH,
+        help="Append run snapshots to this JSONL history file.",
+    )
+    parser.add_argument(
+        "--no-history",
+        action="store_true",
+        help="Run without appending a history snapshot.",
+    )
     args = parser.parse_args()
 
     summary = run_eval(
@@ -266,6 +350,7 @@ def main() -> None:
         output_path=args.output,
         db_path=args.db,
         trial_count=args.trials,
+        history_path=args.history if not args.no_history else None,
     )
     print_summary(summary)
 

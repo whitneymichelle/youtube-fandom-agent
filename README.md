@@ -105,21 +105,8 @@ python -m src.agents.simple_sql_agent "How many videos are in the dataset?"
 | Command | What it does |
 |---|---|
 | `make test` | Runs the pytest suite. |
-| `make eval` | Runs the active question set and writes the JSONL result file. |
-| `make review` | Runs the eval and generates an HTML review without overwriting an existing review. |
-| `make review-overwrite` | Runs the eval and replaces the existing HTML review. |
+| `make eval` | Runs the active question set and appends one snapshot to history, writing the current JSONL result. |
+| `make eval-report` | Runs the eval, appends one snapshot to history, and creates timestamped JSONL and HTML report files. |
+| `make history-report` | Rebuilds the HTML history dashboard from existing run snapshots; it does not append a run. |
 | `make ask q="your question"` | Sends a question directly to the SQL agent. |
 | `make clean-local` | Removes Python caches and pytest cache files. |
-
-The default paths are:
-
-- questions: `evals/questions.json`
-- results: `evals/results/simple_sql_agent.jsonl`
-- review: `evals/reviews/simple_sql_agent_review.html`
-
-You can override a path per command:
-
-```bash
-make eval RESULTS=evals/results/my_run.jsonl
-make review RESULTS=evals/results/my_run.jsonl REVIEW=evals/reviews/my_review.html
-```

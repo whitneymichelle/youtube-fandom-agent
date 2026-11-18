@@ -135,3 +135,34 @@ def test_run_eval_records_three_trials_and_numeric_score(tmp_path):
     assert result["average_score"] == 0.0
     assert result["consistency_score"] == 5
     assert result["overall_score"] == 0.0
+
+
+def test_run_eval_appends_history_snapshot(tmp_path):
+    db_path = create_agent_db(tmp_path)
+    questions_path = tmp_path / "questions.json"
+    output_path = tmp_path / "results.jsonl"
+    history_path = tmp_path / "history" / "runs.jsonl"
+    questions_path.write_text(json.dumps([
+        {
+            "id": "q001",
+            "question": "How many videos are in the dataset?",
+            "difficulty": "easy",
+            "answer_type": "exact",
+            "requires_human_review": False,
+        }
+    ]), encoding="utf-8")
+
+    run_eval(
+        questions_path=str(questions_path),
+        output_path=str(output_path),
+        db_path=str(db_path),
+        history_path=str(history_path),
+    )
+
+    snapshot = json.loads(history_path.read_text(encoding="utf-8").strip())
+    assert snapshot["run_id"]
+    assert snapshot["agent"] == "simple_sql_agent"
+    assert snapshot["question_count"] == 1
+    assert snapshot["overall_score"] == 5.0
+    assert snapshot["questions"][0]["question_id"] == "q001"
+    assert snapshot["questions"][0]["overall_score"] == 5.0

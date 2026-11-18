@@ -53,6 +53,8 @@ data/comments_test/
 htmlcov/
 evals/results/*
 !evals/results/.gitkeep
+evals/history/*
+evals/reviews/*
 
 # Logs
 *.log
